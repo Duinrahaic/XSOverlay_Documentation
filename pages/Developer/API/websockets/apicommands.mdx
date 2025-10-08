@@ -31,6 +31,65 @@ _Layout mode toolbar keyboard button. Summons / dismisses the keyboard._
 ***
 ### Layouts
 _Layout mode toolbar layouts folder button. Summons / dismisses the layout folder._
+***
+
+### LoadLayout
+_Loads a layout by slot number (0-7)_
+```javascript filename="Example.js"
+    Api.Send("LoadLayout", null, layoutSlotNumber);
+```
+
+***
+
+
+### SaveLayout
+_Saves a layout by slot number (0-7)_
+```javascript filename="Example.js"
+    Api.Send("SaveLayout", null, layoutSlotNumber);
+```
+
+***
+
+### DeleteLayout
+_Deletes a layout by slot number (0-7)_
+
+```javascript filename="Example.js"
+    Api.Send("DeleteLayout", null, layoutSlotNumber);
+```
+
+***
+### FavoriteLayout
+_Toggles if the current layout is favorited or not by slot number (0-7)_
+```javascript filename="Example.js"
+    Api.Send("FavoriteLayout", null, layoutSlotNumber);
+```
+
+***
+### RequestLayoutInfo
+_Returns information on the layouts and settings_
+
+```json filename="Return Object (JSON)"
+{
+    "command": "UpdateLayoutInfo",
+    "jsonData": {
+        "currentLayout": int, // Current layout slot number (0-7)
+        "favorite": int, // What layout is favorited (0-7)
+        "layouts": [ // Array of layout information
+            {
+                "name": string, // Name of the layout
+                "version": int, // Version of the layout
+                "index": int // Layout slot number (0-7)
+                "windowCount": int // The number of windows in the layout
+            }
+            // ... more layouts ...
+        ]
+    }
+}
+```
+
+
+
+
 
 ***
 ### Settings
@@ -109,11 +168,25 @@ _Sets a setting on the currently active overlay. Utilizes the setting object. Ea
 | `trackingSpace` | `int` |  This could be mixed (0), head (1), or hand (2) |
 | `captureSelect` | `int` |This is either Windows Game Capture (0) or BitBlt (1) |
 
+
+
 ***
 ### RequestShowTooltip
 _Requests to show a tooltip._
-
 ***
+### PlayAudio
+_Plays audio 2D or spatialized_
+```json filename="Audio Object"
+{
+    "audioPath": string, // File path to .ogg audio file.
+    "spatial": bool, // Whether the audio is spatialized or not.
+    "spatialPosition": float[3], // Position of the spatialized audio. X, Y, Z coordinates.
+    "minDistance": float, // If spatialized, sets min distance.
+    "maxDistance": float, // If spatialized, sets max distance.
+    "volume": float // Volume of the audio, between 0 and 1.
+}
+```
+
 ### PlayDeviceHaptics
 _Allows you to play haptic feedback on a device._
 
@@ -147,7 +220,8 @@ _Websocket notification format is slightly different from UDP notification forma
 | `type` | `int` | The type of message to send. `1` defines a normal notification. | `1` |
 | `index` | `int` | Used for Media Player, changes the icon on the wrist. (depricated, see note below) | `0` |
 | `timeout` | `float` | How long the notification will stay on screen for in seconds. | `0.5f` |
-| `height` | `float` | Height notification will expand to if it has content other than a title. Default is 175. | `175` |
+| `height` | `float` | the height notification will expand to if it has content other than a title. Default is 175. | `175` |
+| `width` | `float` | The width notification will expand to if it has content other than a title. Default is 400. Max of 500. | `400` |
 | `opacity` | `float` | Opacity of the notification, to make it less intrusive. Setting to 0 will set to 1. | `1` |
 | `volume` | `float` | Notification sound volume. | `0.7f` |
 | `audioPath` | `string` | File path to .ogg audio file. Can be "default", "error", or "warning". Notification will be silent if left empty. | `""` |
@@ -249,21 +323,44 @@ _Returns the current date and time, including session length, formatted based on
 _Returns the current theme colors in hexadecimal_
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
-    "command": "UpdateTheme",
+    "command": "RequestThemeUpdate",
     "jsonData": {
-        "HiTone": string,
-        "MidTone": string,
-        "DarkTone": string,
-        "ContrastingTone": string,
-        "ErrorTone": string,
-        "WarningTone": string,
-        "ConfirmTone": string,
-        "AccentColor": string,
-        "AccentColorBright": string
+        "ThemeType" : int, // 0 = None, 1 = Standard, MediaTheme = 2
+        "UseMediaTheme": bool, // Whether media theming is enabled or not. If enabled it overrides all other themes.
+        "Hi": string, // Hex color with alpha, IE #RRGGBBAA
+        "Mid": string,
+        "Dark": string,
+        "Contrasting": string,
+        "Error": string,
+        "Warning": string,
+        "Confirm": string,
+        "Accent": string,
+        "AccentBright": string
     }
 }
 ```
+### RequestSetTheme
+_Sets the current theme to a predefined theme or custom colors._
+```json filename="Theme Object"
+{
+    "command": "RequestSetTheme",
+    "jsonData": {
+        "ThemeType" : int, // 0 = None, 1 = Standard, MediaTheme = 2
+        "UseMediaTheme": bool, // When enabled themeing will be overriden by current media.
+        "Hi": string, // Hex color with alpha, IE #RRGGBBAA
+        "Mid": string,
+        "Dark": string,
+        "Contrasting": string,
+        "Error": string,
+        "Warning": string,
+        "Confirm": string,
+        "Accent": string,
+        "AccentBright": string
+    }
+}
+```
+
+
 
 ***
 
@@ -275,7 +372,6 @@ _This command uses the `rawData` field of `XSOApiObject` rather than the `jsonDa
 
 #### Use
 ```cs
-    XSOApiObject.target = "xsoverlay";
     XSOApiObject.command = "RequestSteamAvatar";
     XSOApiObject.rawData = "medium"; // can be large, medium, or small. defaults to medium if left empty
 
@@ -284,7 +380,6 @@ _This command uses the `rawData` field of `XSOApiObject` rather than the `jsonDa
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateSteamAvatar",
     "jsonData": {},
     "rawData": string // Avatar image .png encoded in base64.
@@ -297,7 +392,6 @@ _Returns a list of devices and information about those devices_
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateDeviceInformation",
     "jsonData": {
         [
@@ -339,7 +433,6 @@ _Returns the current open / closed state of Layout Mode_
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateLayoutModeState",
     "jsonData": {},
     "rawData": bool // bool representing state of layout mode.
@@ -352,7 +445,6 @@ _Returns the current media information_
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateMediaPlayer",
     "jsonData": {
         "artist": string,
@@ -370,7 +462,6 @@ _Returns user settings for the overlay_
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateSettings",
     "jsonData": {
           "AccentColor":  // Represents the theme accent color.
@@ -477,7 +568,6 @@ _Returns the list of possible languages_
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateLanguageList",
     "jsonData": {
         "LanguageName": string,
@@ -493,7 +583,6 @@ _Returns the map of strings for the currently selected language_
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateLanguageMap",
     "jsonData": {
         // Key value map that XSO uses to translate languages.
@@ -508,7 +597,6 @@ _Returns list of achievements with a boolean for unlocked / locked for the user.
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateAchievementStatus",
     "jsonData": {
         "ACHIEVEMENT_NAME": bool,
@@ -524,7 +612,6 @@ _Returns a list of windows that can be captured._
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateWindowList",
     "jsonData": {
           "0": {
@@ -549,7 +636,6 @@ _Requests the current active overlay. This is the overlay that has ownership of 
 
 ```json filename="Return Object (JSON)"
 {
-    "target" : "yourappname",
     "command": "UpdateActiveOverlayInformation",
     "jsonData": {
         "0": {
